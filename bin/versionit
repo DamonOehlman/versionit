@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+var path = require('path'),
+	nopt = require('nopt'),
+	opts = nopt({
+		cwd: path,
+		'no-scm': Boolean,
+	}, {}, process.argv, 2);
+
+require('../')(opts.argv.remain[0], opts, function(err) {
+	if (err) {
+		console.log('error: ' + err);
+	}
+});
