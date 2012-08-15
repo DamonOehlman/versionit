@@ -37,7 +37,7 @@ exports.createVersionFile = function(name, opts, callback) {
 
 	// write 
 	fs.writeFile(
-		path.resolve(__dirname, '..', name + '.json'), 
+		path.resolve(__dirname, '..', name), 
 		JSON.stringify(data, null, 2), 
 		'utf8',
 		callback
