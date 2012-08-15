@@ -1,9 +1,11 @@
 var async = require('async'),
+	debug = require('debug')('versionit'),
 	path = require('path'),
 	fs = require('fs'),
 	semver = require('semver'),
 	reJSON = /\.json$/i,
 	reVersion = /^(\d+)\.?(\d*)\.?(\d*)$/,
+	reLeadingDots = /^\.+/,
 	bumpers = {
 		'bump-major': function(parts) {
 			parts[0]++;
@@ -21,11 +23,6 @@ var async = require('async'),
 
 		bump: function(parts) {
 			parts[2]++;
-		}
-	},
-	scmHandlers = {
-		'.git': function(cwd, version, callback) {
-			callback();
 		}
 	};
 
@@ -74,13 +71,25 @@ function findVersionFiles(targetPath, callback) {
 }
 
 function tagSourceControl(cwd, version, callback) {
-	var scmPaths = Object.keys(scmHandlers).map(path.join.bind(null, cwd));
+	var scmPaths = ['.git'].map(path.join.bind(null, cwd));
 
 	async.detect(scmPaths, fs.exists || path.exists, function(targetPath) {
-		var handler = scmHandlers[path.basename(targetPath)];
+		var scmType = path.basename(targetPath).replace(reLeadingDots, ''),
+			scmHandler;
 
-		if (handler) {
-			handler(cwd, version, callback);
+		if (scmType) {
+			try {
+				debug('scmtype "' + scmType + '" detected, attempting to require tagger');
+				scmHandler = require('./lib/taggers/' + scmType);
+			}
+			catch (e) {
+				// unable to load the scm handler for scmtype, display a warning?
+			}
+		}
+
+		// if we have an scm handler, then run it
+		if (scmHandler) {
+			scmHandler(cwd, version, callback);
 		}
 		else {
 			callback();
