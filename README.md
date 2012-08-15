@@ -6,6 +6,8 @@ VersionIt is a simple versioning helper inspired by the ultra useful `npm versio
 
 - tags the version control used in the cwd with the updated version, currently only `git` is supported, but implementing additional SCM taggers should be pretty simple.
 
+<a href="http://travis-ci.org/#!/DamonOehlman/versionit"><img src="https://secure.travis-ci.org/DamonOehlman/versionit.png" alt="Build Status"></a>
+
 ## Why does VersionIt exist?
 
 VersionIt has been written to provide the same functionality (and a little bit extra) provided by the `npm version` but in a package manager agnostic way.  For instance, we have a number of package management solutions poppping up that use a similar approach to NPM but with different configuration files.  Things such as:
