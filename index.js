@@ -161,28 +161,39 @@ module.exports = function(command, opts, callback) {
 			return parseInt(part, 10);
 		});
 
-		// if we a command that is a bumper, then bump it
-		if (bumpers[command]) {
-			bumpers[command](versionParts);
-		}
+		// if we have a command, then run an update
+		if (command) {
+			// if we a command that is a bumper, then bump it
+			if (bumpers[command]) {
+				bumpers[command](versionParts);
+			}
 
-		detectSCM(opts, function(err, tagger) {
-			if (err) return callback(err);
+			// update the current version
+			currentVersion = versionParts.join('.');
 
-			// apply the new version to the version files
-			updateVersionFiles(files, versionParts.join('.'), function(err) {
+			detectSCM(opts, function(err, tagger) {
 				if (err) return callback(err);
 
-				// if we have a tagger, then run that now
-				if (tagger) {
-					tagger.tag(versionParts.join('.'), opts, callback);
-				}
-				// otherwise, just trigger the callback
-				else {
-					callback();
-				}
-			});
-		});
+				// apply the new version to the version files
+				updateVersionFiles(files, currentVersion, function(err) {
+					if (err) return callback(err);
 
+					// if we have a tagger, then run that now
+					if (tagger) {
+						tagger.tag(currentVersion, opts, function(err) {
+							callback(err, currentVersion);
+						});
+					}
+					// otherwise, just trigger the callback
+					else {
+						callback(null, currentVersion);
+					}
+				});
+			});			
+		}
+		// otherwise, just report the current version
+		else {
+			callback(null, versionParts.join('.'));
+		}
 	});
 };

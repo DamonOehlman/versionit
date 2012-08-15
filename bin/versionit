@@ -4,10 +4,18 @@ var path = require('path'),
 	opts = nopt({
 		cwd: path,
 		'no-scm': Boolean,
-	}, {}, process.argv, 2);
+		'message': String
+	}, {}, process.argv, 2),
+	command = opts.argv.remain[0];
 
-require('../')(opts.argv.remain[0], opts, function(err) {
+require('../')(command, opts, function(err, version) {
 	if (err) {
 		console.log('error: ' + err);
+	}
+	else if (command) {
+		console.log('package updated to version: ' + version);
+	}
+	else {
+		console.log('current package version: ' + version);
 	}
 });
