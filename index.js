@@ -70,31 +70,38 @@ function findVersionFiles(targetPath, callback) {
 	});
 }
 
-function tagSourceControl(cwd, version, callback) {
-	var scmPaths = ['.git'].map(path.join.bind(null, cwd));
+function detectSCM(opts, callback) {
+	var scmPaths = ['.git'].map(path.join.bind(null, opts.cwd));
 
+	// if we are skipping scm support, then don't go looking
+	if (opts['no-scm']) return callback();
+
+	// look for the scm directories, and then attempt to find a relevant handler
 	async.detect(scmPaths, fs.exists || path.exists, function(targetPath) {
 		var scmType = path.basename(targetPath).replace(reLeadingDots, ''),
-			scmHandler;
+			tagger;
 
 		if (scmType) {
 			try {
 				debug('scmtype "' + scmType + '" detected, attempting to require tagger');
-				scmHandler = require('./lib/taggers/' + scmType);
+				tagger = require('./lib/taggers/' + scmType);
 			}
 			catch (e) {
 				// unable to load the scm handler for scmtype, display a warning?
 			}
 		}
 
-		// if we have an scm handler, then run it
-		if (scmHandler) {
-			scmHandler(cwd, version, callback);
+		// if we have a tagger and the tagger has a precheck function, run that now
+		if (tagger && typeof tagger.preCheck == 'function') {
+			tagger.preCheck(opts, function(err) {
+				callback(err, tagger);
+			});
 		}
+		// otherwise, just return the tagger if we have one 
 		else {
-			callback();
+			callback(null, tagger);
 		}
-	});
+	});	
 }
 
 function updateVersionFiles(files, version, callback) {
@@ -159,17 +166,23 @@ module.exports = function(command, opts, callback) {
 			bumpers[command](versionParts);
 		}
 
-		// apply the new version to the version files
-		updateVersionFiles(files, versionParts.join('.'), function(err) {
+		detectSCM(opts, function(err, tagger) {
 			if (err) return callback(err);
 
-			// if we aren't updating scm, fire the callback
-			if (opts['no-scm']) {
-				callback();
-			}
-			else {
-				tagSourceControl(opts.cwd, versionParts.join('.'), callback);
-			}
+			// apply the new version to the version files
+			updateVersionFiles(files, versionParts.join('.'), function(err) {
+				if (err) return callback(err);
+
+				// if we have a tagger, then run that now
+				if (tagger) {
+					tagger.tag(versionParts.join('.'), opts, callback);
+				}
+				// otherwise, just trigger the callback
+				else {
+					callback();
+				}
+			});
 		});
+
 	});
 };
