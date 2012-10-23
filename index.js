@@ -3,6 +3,7 @@ var async = require('async'),
 	path = require('path'),
 	fs = require('fs'),
 	semver = require('semver'),
+	Buffer = require('buffer').Buffer,
 	reJSON = /\.json$/i,
 	reVersion = /^(\d+)\.?(\d*)\.?(\d*)$/,
 	reLeadingDots = /^\.+/,
@@ -31,7 +32,7 @@ function isEmpty(item) {
 }
 
 function hasVersion(entry) {
-	return typeof entry.version != 'undefined';
+	return entry.data && typeof entry.data.version != 'undefined';
 }
 
 function findVersionFiles(targetPath, callback) {
@@ -53,19 +54,22 @@ function findVersionFiles(targetPath, callback) {
 				entries.forEach(function(entry, index) {
 					entries[index] = JSON.parse(entry.toString());
 				});
-
-				// return the entries for the specified version
-				callback(null, entries.filter(hasVersion).map(function(entry, index) {
-					return {
-						filename: versionFiles[index],
-						data: entry,
-						version: entry.version
-					};
-				}));
 			}
 			catch (e) {
-				callback(e);
+				return callback(e);
 			}
+
+			// convert the data into the correct format
+			entries = entries.map(function(entry, index) {
+				return {
+					filename: versionFiles[index],
+					data: entry,
+					version: entry.version
+				};
+			});
+
+			// return the entries for the specified version
+			callback(null, entries.filter(hasVersion));
 		});
 	});
 }
@@ -107,6 +111,8 @@ function detectSCM(opts, callback) {
 function updateVersionFiles(files, version, callback) {
 	// iterate through the version files, update the data and write the file
 	async.forEach(files, function(filedata, itemCallback) {
+		debug('writing update for file: ' + filedata.filename);
+
 		// update the version in the data
 		filedata.data.version = version;
 
