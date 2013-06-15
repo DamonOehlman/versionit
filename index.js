@@ -75,7 +75,9 @@ function findVersionFiles(targetPath, callback) {
 }
 
 function detectSCM(opts, callback) {
-	var scmPaths = ['.git'].map(path.join.bind(null, opts.cwd));
+	var scmPaths = ['.git'].map(function(location) {
+			return path.join(opts.cwd, location);
+		});
 
 	// if we are skipping scm support, then don't go looking
 	if (opts['no-scm']) return callback();
@@ -177,6 +179,7 @@ module.exports = function(command, opts, callback) {
 			// update the current version
 			currentVersion = versionParts.join('.');
 
+			debug('attempting to detect currently configured scm, in path: ' + opts.cwd);
 			detectSCM(opts, function(err, tagger) {
 				if (err) return callback(err);
 
