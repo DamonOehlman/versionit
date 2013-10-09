@@ -1,8 +1,8 @@
 {
   "name": "versionit",
-  "description": "Simple Versioning Helper",
+  "description": "Version manage all the things",
   "author": "Damon Oehlman <damon.oehlman@gmail.com>",
-  "tags": [
+  "keywords": [
     "version",
     "versioning",
     "git",
@@ -16,22 +16,20 @@
     "async": "0.2.x",
     "debug": "*",
     "nopt": "2.1.x",
-    "semver": "1.1.x"
+    "semver": "2.1.x"
   },
   "devDependencies": {
     "mocha": "1.9.x",
-    "underscore": "1.4.x"
+    "underscore": "1.5.x"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/DamonOehlman/versionit.git"
+    "url": "https://bitbucket.org/DamonOehlman/versionit.git"
   },
   "bugs": {
-    "url": "http://github.com/DamonOehlman/versionit/issues"
+    "url": "https://bitbucket.org/DamonOehlman/versionit/issues"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --reporter spec"
-  },
-  "contributors": [],
-  "optionalDependencies": {}
+    "test": "$(npm bin)/mocha --reporter spec"
+  }
 }
