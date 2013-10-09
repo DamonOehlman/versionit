@@ -14,7 +14,9 @@ exports.removeVersionFiles = function(callback) {
 	var basePath = path.resolve(__dirname, '..');
 
 	fs.readdir(basePath, function(err, files) {
-		files = (files || []).filter(isJSON).map(path.join.bind(null, basePath));
+		files = (files || []).filter(isJSON).map(function(child) {
+			return path.join(basePath, child);
+		});
 
 		// delete the files
 		async.forEach(files, fs.unlink, callback);
