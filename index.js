@@ -107,7 +107,7 @@ function detectSCM(opts, callback) {
 		else {
 			callback(null, tagger);
 		}
-	});	
+	});
 }
 
 function updateVersionFiles(files, version, callback) {
@@ -120,7 +120,7 @@ function updateVersionFiles(files, version, callback) {
 
 		// write the file
 		fs.writeFile(
-			filedata.filename, 
+			filedata.filename,
 			JSON.stringify(filedata.data, null, 2),
 			itemCallback
 		);
@@ -198,7 +198,7 @@ module.exports = function(command, opts, callback) {
 						callback(null, currentVersion);
 					}
 				});
-			});			
+			});
 		}
 		// otherwise, just report the current version
 		else {
