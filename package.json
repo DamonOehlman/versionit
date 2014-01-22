@@ -16,20 +16,27 @@
     "async": "0.2.x",
     "debug": "*",
     "nopt": "2.1.x",
-    "semver": "2.1.x"
+    "semver": "~2.2.1"
   },
   "devDependencies": {
-    "mocha": "1.9.x",
+    "mocha": "~1.17.0",
     "underscore": "1.5.x"
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/DamonOehlman/versionit.git"
+    "url": "https://github.com/DamonOehlman/versionit.git"
   },
   "bugs": {
-    "url": "https://bitbucket.org/DamonOehlman/versionit/issues"
+    "url": "https://github.com/DamonOehlman/versionit/issues"
   },
   "scripts": {
-    "test": "$(npm bin)/mocha --reporter spec"
-  }
+    "test": "$(npm bin)/mocha --reporter spec",
+    "gendocs": "gendocs > README.md"
+  },
+  "homepage": "https://github.com/DamonOehlman/versionit",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "license": "MIT"
 }
