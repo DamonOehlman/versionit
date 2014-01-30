@@ -12,7 +12,7 @@
     "versionit": "./bin/versionit"
   },
   "preferGlobal": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "dependencies": {
     "async": "0.2.x",
     "debug": "*",
