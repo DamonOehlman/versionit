@@ -19,8 +19,7 @@
     "nopt": "2.1.x",
     "semver": "~2.2.1",
     "astw": "0.0.0",
-    "esprima": "~1.0.4",
-    "escodegen": "~1.1.0"
+    "esprima": "~1.0.4"
   },
   "devDependencies": {
     "mocha": "~1.17.0",
