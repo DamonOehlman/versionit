@@ -6,7 +6,7 @@ var assert = require('assert'),
 
 function testCommand(command, preVersion, postVersion) {
 	return function(done) {
-		mocker.createVersionFile('test.json', { version: preVersion }, function(mockErr) {
+		mocker.createVersionFile('test', { version: preVersion }, function(mockErr) {
 			versionit(command, { cwd: __dirname }, function(err) {
 				assert.ifError(err);
 
@@ -16,7 +16,19 @@ function testCommand(command, preVersion, postVersion) {
 					assert(data);
 					assert.equal(JSON.parse(data).version, postVersion);
 
-					done();
+					// read the js file
+					fs.readFile(path.resolve(__dirname, 'test.js'), 'utf8', function(jsReadErr, jsData) {
+						var expected = [
+							'var metadata = { version: "' + postVersion + '" };',
+							'module.exports = metadata.version;'
+						].join('\n');
+
+						assert.ifError(jsReadErr);
+						assert(jsData);
+						assert.equal(jsData, expected);
+
+						done();
+					});
 				});
 			});
 		});

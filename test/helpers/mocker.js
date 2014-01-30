@@ -1,47 +1,64 @@
-var async = require('async'),
-	path = require('path'),
-	fs = require('fs'),
-	scaffoldData = {
-		name: 'Scaffold Test Data'
-	},
-	_ = require('underscore');
+var async = require('async');
+var path = require('path');
+var fs = require('fs');
+var _ = require('underscore');
 
-function isJSON(filename) {
-	return (/\.json$/i).test(filename);
+var scaffoldData = {
+  name: 'Scaffold Test Data'
+};
+
+function canDelete(filename) {
+  return (/\.json$/i).test(filename) || filename === 'test.js';
 }
 
 exports.removeVersionFiles = function(callback) {
-	var basePath = path.resolve(__dirname, '..');
+  var basePath = path.resolve(__dirname, '..');
 
-	fs.readdir(basePath, function(err, files) {
-		files = (files || []).filter(isJSON).map(function(child) {
-			return path.join(basePath, child);
-		});
+  fs.readdir(basePath, function(err, files) {
+    files = (files || []).filter(canDelete).map(function(child) {
+      return path.join(basePath, child);
+    });
 
-		// delete the files
-		async.forEach(files, fs.unlink, callback);
-	});
-};	
+    // delete the files
+    async.forEach(files, fs.unlink, callback);
+  });
+};  
 
 exports.createVersionFile = function(name, opts, callback) {
-	var data;
+  function makeJSONFile(cb) {
+    // initialise the data
+    var data = _.extend({}, scaffoldData, {
+      version: '0.1.0'
+    }, opts);
 
-	// handle the 2 args case
-	if (typeof opts == 'function') {
-		callback = opts;
-		opts = {};
-	}
+    // write 
+    fs.writeFile(
+      path.resolve(__dirname, '..', name + '.json'), 
+      JSON.stringify(data, null, 2), 
+      'utf8',
+      cb
+    );  
+  }
 
-	// initialise the data
-	data = _.extend({}, scaffoldData, {
-		version: '0.1.0'
-	}, opts);
+  function makeJSFile(cb) {
+    var lines = [
+      'var metadata = { version: "0.1.0" };',
+      'module.exports = metadata.version;'
+    ];
 
-	// write 
-	fs.writeFile(
-		path.resolve(__dirname, '..', name), 
-		JSON.stringify(data, null, 2), 
-		'utf8',
-		callback
-	);	
+    fs.writeFile(
+      path.resolve(__dirname, '..', name + '.js'),
+      lines.join('\n'),
+      'utf8',
+      cb
+    );
+  }
+
+  // handle the 2 args case
+  if (typeof opts == 'function') {
+    callback = opts;
+    opts = {};
+  }
+
+  async.parallel([ makeJSONFile, makeJSFile ], callback);
 };
