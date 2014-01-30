@@ -210,6 +210,7 @@ function updateJSFiles(targetPath, version) {
           var updatedSource = hasVersionMetadata(buffer.toString());
 
           if (updatedSource) {
+            console.log('applied version metadata update to: ' + files[index]);
             fs.writeFileSync(files[index], updatedSource);
           }
         });
