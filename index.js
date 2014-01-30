@@ -2,7 +2,9 @@
 'use strict';
 
 var async = require('async');
+var astw = require('astw');
 var debug = require('debug')('versionit');
+var esprima = require('esprima');
 var path = require('path');
 var fs = require('fs');
 var semver = require('semver');
@@ -11,6 +13,7 @@ var reJSON = /\.json$/i;
 var reJS = /\.js$/i;
 var reVersion = /^(\d+)\.?(\d*)\.?(\d*)$/;
 var reLeadingDots = /^\.+/;
+var reWhitespace = /\s/;
 
 /**
   # versionit
@@ -120,7 +123,6 @@ function findVersionFiles(targetPath, callback) {
         };
       });
 
-      // return the entries for the specified version
       callback(null, entries.filter(hasVersion));
     });
   });
@@ -164,9 +166,63 @@ function detectSCM(opts, callback) {
   });
 }
 
-function updateFiles(files, version, callback) {
+function updateJSFiles(targetPath, version) {
+  return function(callback) {
+    var files = [];
+    var walkers;
 
-  function updateVersionFiles(cb) {
+    function hasVersionMetadata(source) {
+      var ast = esprima.parse(source, { range: true });
+      var walk = astw(ast);
+      var updated = false;
+      var range;
+
+      walk(function(node) {
+        var foundVersionMetadata = node.type === 'Identifier' &&
+          node.name === 'version' &&
+          node.parent.type === 'Property' &&
+          node.parent.value.type === 'Literal';
+
+        if (foundVersionMetadata) {
+          source = updateSource(source, node.parent.value.range);
+          updated = true;
+        }
+      });
+
+      return updated && source;
+    }
+
+    function updateSource(source, range) {
+      return source.slice(0, range[0]) + 
+        '\'' + version + '\'' + source.slice(range[1]);
+    }
+
+    fs.readdir(targetPath, function(err, files) {
+      files = files.filter(reJS.test.bind(reJS)).map(function(file) {
+        return path.join(targetPath, file);
+      });
+
+      // read each of the files
+      async.map(files, fs.readFile, function(err, entries) {
+        if (err) return callback(err);
+
+        entries.forEach(function(buffer, index) {
+          var updatedSource = hasVersionMetadata(buffer.toString());
+
+          if (updatedSource) {
+            fs.writeFileSync(files[index], updatedSource);
+          }
+        });
+
+        // console.log(walkers);
+        callback();
+      });
+    });
+  };
+}
+
+function updateJSONFiles(files, version) {
+  return function(callback) {
     // iterate through the version files, update the data and write the file
     async.forEach(files, function(filedata, itemCallback) {
       debug('writing update for file: ' + filedata.filename);
@@ -180,14 +236,8 @@ function updateFiles(files, version, callback) {
         JSON.stringify(filedata.data, null, 2),
         itemCallback
       );
-    }, cb);
-  }
-
-  function updateJSFiles(cb) {
-    cb();
-  }
-
-  async.series([ updateVersionFiles, updateJSFiles ], callback);
+    }, callback);
+  };
 }
 
 module.exports = function(command, opts, callback) {
@@ -248,8 +298,10 @@ module.exports = function(command, opts, callback) {
       detectSCM(opts, function(err, tagger) {
         if (err) return callback(err);
 
-        // apply the new version to the version files
-        updateFiles(files, currentVersion, function(err) {
+        async.series([
+          updateJSONFiles(files, currentVersion),
+          updateJSFiles(opts.cwd, currentVersion)
+        ], function(err) {
           if (err) return callback(err);
 
           // if we have a tagger, then run that now
@@ -262,7 +314,7 @@ module.exports = function(command, opts, callback) {
           else {
             callback(null, currentVersion);
           }
-        });
+        })
       });
     }
     // otherwise, just report the current version

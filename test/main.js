@@ -19,7 +19,7 @@ function testCommand(command, preVersion, postVersion) {
 					// read the js file
 					fs.readFile(path.resolve(__dirname, 'test.js'), 'utf8', function(jsReadErr, jsData) {
 						var expected = [
-							'var metadata = { version: "' + postVersion + '" };',
+							'var metadata = { version: \'' + postVersion + '\' };',
 							'module.exports = metadata.version;'
 						].join('\n');
 
