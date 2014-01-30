@@ -8,6 +8,7 @@ var fs = require('fs');
 var semver = require('semver');
 var Buffer = require('buffer').Buffer;
 var reJSON = /\.json$/i;
+var reJS = /\.js$/i;
 var reVersion = /^(\d+)\.?(\d*)\.?(\d*)$/;
 var reLeadingDots = /^\.+/;
 
@@ -163,21 +164,30 @@ function detectSCM(opts, callback) {
   });
 }
 
-function updateVersionFiles(files, version, callback) {
-  // iterate through the version files, update the data and write the file
-  async.forEach(files, function(filedata, itemCallback) {
-    debug('writing update for file: ' + filedata.filename);
+function updateFiles(files, version, callback) {
 
-    // update the version in the data
-    filedata.data.version = version;
+  function updateVersionFiles(cb) {
+    // iterate through the version files, update the data and write the file
+    async.forEach(files, function(filedata, itemCallback) {
+      debug('writing update for file: ' + filedata.filename);
 
-    // write the file
-    fs.writeFile(
-      filedata.filename,
-      JSON.stringify(filedata.data, null, 2),
-      itemCallback
-    );
-  }, callback);
+      // update the version in the data
+      filedata.data.version = version;
+
+      // write the file
+      fs.writeFile(
+        filedata.filename,
+        JSON.stringify(filedata.data, null, 2),
+        itemCallback
+      );
+    }, cb);
+  }
+
+  function updateJSFiles(cb) {
+    cb();
+  }
+
+  async.series([ updateVersionFiles, updateJSFiles ], callback);
 }
 
 module.exports = function(command, opts, callback) {
@@ -239,7 +249,7 @@ module.exports = function(command, opts, callback) {
         if (err) return callback(err);
 
         // apply the new version to the version files
-        updateVersionFiles(files, currentVersion, function(err) {
+        updateFiles(files, currentVersion, function(err) {
           if (err) return callback(err);
 
           // if we have a tagger, then run that now
