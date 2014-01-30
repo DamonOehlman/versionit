@@ -60,6 +60,40 @@ var reWhitespace = /\s/;
     your package.
     
   - Or just run `versionit` to get the current version of the package.
+
+  ## WARNING: Experimental JS version metadata now included
+
+  If you are considering using versionit with your project, then for the time
+  being I would recommend installing the `0.2` version:
+
+  ```
+  npm install versionit@0.2 -g
+  ```
+
+  From the `0.3` version onwards I have included expreimental support for
+  being able to bump version metadata that is included within a `.js` file
+  included in your modules root directory.
+
+  For example, consider you have a JS file with the following content:
+
+  ```js
+  var metadata = {
+    version: '0.1.0'
+  };
+  ```
+
+  This would be updated by `versionit` to synchronize with the `package.json`
+  version once updated by versionit.  This is done by versionit doing a walk
+  of the AST of the file and looking specifically for `version` property
+  within an object containing a literal value.  If found, the source of the
+  file is modified where the version was discovered with updated version
+  and written back to the file system.
+
+  __NOTE:__ This does not perform a full regeneration of your source but a
+  targeted replacement of the version string.  The only thing that you may
+  notice a difference with is if you use double-quotes rather than single
+  quotes for your literal strings.
+
 **/
 
 var bumpers = {
