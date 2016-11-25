@@ -241,11 +241,20 @@ function updateJSFiles(targetPath, version) {
         if (err) return callback(err);
 
         entries.forEach(function(buffer, index) {
-          var updatedSource = hasVersionMetadata(buffer.toString());
+          var bufferText = buffer.toString();
+          var firstLine = bufferText.split("\n")[0];
+          if (firstLine.startsWith("#!")) {
+            //We're busy with a bang file, will not pass esprima. Remove the line and add it later
+            bufferText = bufferText.substr(firstLine.length + 1);
+            firstLine = firstLine + '\n';
+          } else {
+            firstLine = '';
+          }
+          var updatedSource = hasVersionMetadata(bufferText);
 
           if (updatedSource) {
             console.log('applied version metadata update to: ' + files[index]);
-            fs.writeFileSync(files[index], updatedSource);
+            fs.writeFileSync(files[index], firstLine + updatedSource);
           }
         });
 
